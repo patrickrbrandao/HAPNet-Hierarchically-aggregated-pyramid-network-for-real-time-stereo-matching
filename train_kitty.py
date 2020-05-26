@@ -1,25 +1,16 @@
 import pdb
 import sys
-sys.path.insert(0, '../vgg')
-
-sys.path.insert(0, '../')
 import tensorflow as tf
 import numpy as np
 import cnn_function as cnn
 import os
 import random
-#os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
-#os.environ["CUDA_VISIBLE_DEVICES"]="1,2"
-#from tensorflow.python.client import device_lib
-#print (device_lib.list_local_devices())
-#exit(0)
 from scipy import ndimage
 import matplotlib.pyplot as plt
 import scipy
 from util import init_logger, ft3d_filenames
 
 def load_kitti_2012(kitti_2012_path,nvalidation=32,shuffle=True):
-    #validation_index=np.random.randint(low=0, high=193, size=nvalidation)
     deck = list(range(0, 194))
     np.random.shuffle(deck)
     validation_index=deck[0:nvalidation]
@@ -35,30 +26,17 @@ def load_kitti_2012(kitti_2012_path,nvalidation=32,shuffle=True):
             validation_list_left.append(os.path.join(kitti_2012_path, "training/colored_0",str(i).zfill(6)+"_10.png"))
             validation_list_right.append(os.path.join(kitti_2012_path, "training/colored_1",str(i).zfill(6)+"_10.png"))
             validation_list_noc_label.append(os.path.join(kitti_2012_path, "training/disp_noc",str(i).zfill(6)+"_10.png"))
-            #print(os.path.exists(training_list_noc_label[-1]),os.path.exists(training_list_noc_label[-1]))
-            #test=np.round(ndimage.imread(training_list_noc_label[-1])/256.0)
-
-            #exit(0)
-
+           
         else:
             training_list_left.append(os.path.join(kitti_2012_path, "training/colored_0",str(i).zfill(6)+"_10.png"))
             training_list_right.append(os.path.join(kitti_2012_path, "training/colored_1",str(i).zfill(6)+"_10.png"))
             training_list_noc_label.append(os.path.join(kitti_2012_path, "training/disp_noc",str(i).zfill(6)+"_10.png"))
-            #print(os.path.exists(validation_list_noc_label[-1]),os.path.exists(validation_list_noc_label[-1]))
-            #test=np.round(ndimage.imread(validation_list_noc_label[-1])/256.0)
 
-
-    #test_list_left=[]
-    #test_list_right=[]
-    #for i in range(0,195):
-    #    test_list_left.append(os.path.join(kitti_2012_path, "testing/colored_0",str(i).zfill(6)+"_10.png"))
-    #    test_list_right.append(os.path.join(kitti_2012_path, "testing/colored_1",str(i).zfill(6)+"_10.png"))
-    #    print(os.path.exists(test_list_left[-1]),os.path.exists(test_list_right[-1]))
     return training_list_left,training_list_right,training_list_noc_label,validation_list_left,validation_list_right,validation_list_noc_label
 
 
 def load_kitti_2015(kitti_2015_path,nvalidation=40,shuffle=True):
-    #validation_index=np.random.randint(low=0, high=199, size=nvalidation)
+   
     deck = list(range(0, 200))
     np.random.shuffle(deck)
     validation_index=deck[0:nvalidation]
@@ -73,48 +51,17 @@ def load_kitti_2015(kitti_2015_path,nvalidation=40,shuffle=True):
             validation_list_left.append(os.path.join(kitti_2015_path, "training/image_2",str(i).zfill(6)+"_10.png"))
             validation_list_right.append(os.path.join(kitti_2015_path, "training/image_3",str(i).zfill(6)+"_10.png"))
             validation_list_noc_label.append(os.path.join(kitti_2015_path, "training/disp_noc_0",str(i).zfill(6)+"_10.png"))
-            #print(os.path.exists(validation_list_left[-1]),os.path.exists(validation_list_right[-1]),os.path.exists(training_list_noc_label[-1]))
-            #test=np.round(ndimage.imread(training_list_noc_label[-1])/256.0)
-            #test=np.round(ndimage.imread(training_list_noc_label[-1])/256.0)
-            #if(np.max(test)>200):
-            #if(np.max(test)>150):
-            #    print(np.max(test))
-                #exit(0)
-
+         
         else:
             training_list_left.append(os.path.join(kitti_2015_path, "training/image_2",str(i).zfill(6)+"_10.png"))
             training_list_right.append(os.path.join(kitti_2015_path, "training/image_3",str(i).zfill(6)+"_10.png"))
             training_list_noc_label.append(os.path.join(kitti_2015_path, "training/disp_noc_0",str(i).zfill(6)+"_10.png"))
-            #print(os.path.exists(training_list_left[-1]),os.path.exists(training_list_right[-1]),os.path.exists(training_list_noc_label[-1]))
-            #test=np.round(ndimage.imread(validation_list_noc_label[-1])/256.0)
-            #if(np.max(test)>150):
-            #print(np.min(test),np.max(test))
+   
 
     return training_list_left,training_list_right,training_list_noc_label,validation_list_left,validation_list_right,validation_list_noc_label
 
 def load_disp(path):
     return np.round(ndimage.imread(path,flatten=True)/256.0)
-
-#outdated ignore
-def pad_image_and_label(im_left,im_right,im_d,total_patch_size,patch_size,maxDisp):
-    constValue=-134.0/79.0
-    if (im_left.shape[0]<total_patch_size) or(im_left.shape[1]<total_patch_size):
-        pad_x_left=max(0,total_patch_size-im_left.shape[0])
-        pad_y_left=max(0,total_patch_size-im_left.shape[1])
-        im_left=np.pad(im_left, ((0,pad_x_left), (0,pad_y_left),(0,0)), "constant",constant_values=(constValue))
-
-        im_right=np.pad(im_right,((0,pad_x_left), (0,pad_y_left),(0,0)), "constant",constant_values=(constValue))
-
-        pad_x_d=max(0,patch_size-im_d.shape[0])
-        pad_y_d=max(0,patch_size-im_d.shape[1])
-        im_d=np.pad(im_d, ((0,pad_x_d), (pad_y_d,0)), "constant")
-
-
-    if(im_right.shape[0]<total_patch_size) or(im_right.shape[1]<(total_patch_size+maxDisp)):
-        pad_x_right=max(0,total_patch_size-im_right.shape[0])
-        pad_y_right=max(0,maxDisp+total_patch_size-im_right.shape[1])
-        im_right=np.pad(im_right, ((0,pad_x_right),(pad_y_right,0),(0,0)), "constant",constant_values=(constValue))
-    return im_left,im_right,im_d
 
 
 def load_full_images(training_list_left,training_list_right,training_list_noc_label,maxDisp,batch_size,size):
@@ -132,10 +79,7 @@ def load_full_images(training_list_left,training_list_right,training_list_noc_la
     #negative_mining=[2, 3, 5, 6, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 33, 34, 35, 36, 49, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 69, 72, 73, 74, 88, 93, 100, 101, 102, 103, 104, 107, 108, 109, 110, 118, 120, 122, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 138, 139, 142, 143, 144, 145, 147, 148, 150, 151, 152, 153, 154, 155, 158, 159, 160, 161, 162, 163, 164, 165, 169, 172, 173, 176, 178, 183, 187, 188, 192, 193, 194, 195, 197]
     for batch in range(0,batch_size):
         random_image_index=np.random.randint(len(training_list_left))
-        #random_image_index=np.random.randint(len(negative_mining))
-        #random_image_index=negative_mining[random_image_index]
-        #d=disp_image_to_label(training_list_noc_label[random_image_index],maxDisp+1)
-
+   
         orign_size=training_list_left[random_image_index].shape
         r_pad=size[0]-orign_size[0]
         c_pad=size[1]-orign_size[1]
@@ -144,37 +88,19 @@ def load_full_images(training_list_left,training_list_right,training_list_noc_la
         right=np.pad(training_list_right[random_image_index],[(r_pad, 0), (0,c_pad),(0, 0)],mode= 'constant')
         d=np.pad(training_list_noc_label[random_image_index],[(r_pad, 0), (0,c_pad)],mode= 'constant')
 
-        #orign_size=training_list_left[random_image_index].shape
-        #random_x=np.random.randint(orign_size[0]-size[0])
-        #random_y=np.random.randint(orign_size[1]-size[1])
-        #left=training_list_left[random_image_index][random_x:random_x+size[0],random_y:random_y+size[1],:]
-        #right=training_list_right[random_image_index][random_x:random_x+size[0],random_y:random_y+size[1],:]
-        #d=np.round(training_list_noc_label[random_image_index])[random_x:random_x+size[0],random_y:random_y+size[1]]
-
-
+    
         left=left/255.0
         right=right/255.0
 
         left=(left-mean)/std
         right=(right-mean)/std
-        #left=(left-np.mean(left))/np.std(left)
-        #right=(right-np.mean(right))/np.std(right)
-
-        #temp
-        # left=training_list_left[random_image_index][20:20+size[0],200:200+size[1],:]
-        # right=training_list_right[random_image_index][20:20+size[0],200:200+size[1],:]
-        # d=training_list_noc_label[random_image_index][20:20+size[0],200:200+size[1]]
-
-
+     
         left = left[np.newaxis,...]
         right = right[np.newaxis,...]
         d= d[np.newaxis,...]
         batch_left=np.concatenate([batch_left, left],axis=0)
         batch_right=np.concatenate([batch_right, right],axis=0)
         batch_disp=np.concatenate([batch_disp, d],axis=0)
-    #batch_left=tf.image.resize_images(tf.stack(batch_left),size)
-    #batch_right=tf.image.resize_images(tf.stack(batch_right),size)
-    #sbatch_disp=tf.squeeze(tf.image.resize_images(tf.expand_dims(tf.stack(batch_disp),-1),size))
     return batch_left,batch_right,batch_disp
 
 
@@ -191,8 +117,6 @@ def preprocess(left_img, right_img, target, size):
     right_img = right_img - mean
     right_img=right_img/std
 
-    #scale=0.4+0.8*np.random.random_sample()
-    #newSize=[int(height*scale),int(width*scale)]
     random_x=np.random.randint(540-size[0])
     random_y=np.random.randint(960-size[1])
 
@@ -200,14 +124,6 @@ def preprocess(left_img, right_img, target, size):
     right_img=right_img[random_x:random_x+size[0],random_y:random_y+size[1],:]
     target=target[random_x:random_x+size[0],random_y:random_y+size[1]]
 
-    #mask = tf.cast(target<192, dtype=tf.bool)
-    #target = tf.where(mask, target, tf.zeros_like(target))
-    #
-    # left_img = tf.image.resize_bilinear(left_img[np.newaxis, :, :, :], [height, width])[0]
-    # right_img = tf.image.resize_bilinear(right_img[np.newaxis,:, :, :], [height, width])[0]
-    # target =tf.image.resize_nearest_neighbor(target[np.newaxis, :, :, np.newaxis], [height, width])[0]
-    # target=tf.squeeze(target,-1)
-    #target = target /scale
     left_img.set_shape([height, width, 3])
     right_img.set_shape([height, width, 3])
     target.set_shape([height, width])
@@ -224,9 +140,7 @@ def load_image(path):
 def read_sample(filename_queue):
     filenames = filename_queue.dequeue()
     left_fn, right_fn, disp_fn = filenames[0], filenames[1], filenames[2]
-    #left_img = tf.image.decode_image(tf.read_file(left_fn))
-    #right_img = tf.image.decode_image(tf.read_file(right_fn))
-    #atest=np.load
+  
     left_img = tf.py_func(lambda x: load_image(x), [left_fn], [tf.uint8])[0]
     right_img = tf.py_func(lambda x: load_image(x), [right_fn], [tf.uint8])[0]
     target = tf.py_func(lambda x: load_numpy(x), [disp_fn], [tf.float32])[0]
@@ -276,13 +190,7 @@ def load_scene_flow_images(training_list,training_list_noc_label,batch_size,size
         right=ndimage.imread(training_list[random_image_index].replace("left","right"))[random_x:random_x+size[0],random_y:random_y+size[1],:]
         d=np.round(np.load(training_list_noc_label[random_image_index]))[random_x:random_x+size[0],random_y:random_y+size[1]]
         d[d>192]=0
-        #d[:,0:50]=0
-        #left=scipy.misc.imresize(left,size)
-        #right=scipy.misc.imresize(right,size)
-        #d=scipy.misc.imresize(d,size,interp='nearest')
-        #d[d>191]=0
-        #depth[depth>128]=0
-        #print(np.max(np.max(left)),np.min(np.min(left)),np.max(np.max(d)),np.min(np.min(d)))
+     
 
         left=np.array(left,dtype=np.float32)
         right=np.array(right,dtype=np.float32)
@@ -292,44 +200,13 @@ def load_scene_flow_images(training_list,training_list_noc_label,batch_size,size
         left=np.pad(left,[(r_pad, 0), (0,c_pad),(0, 0)], mode='constant')
         right=np.pad(right,[(r_pad, 0), (0,c_pad),(0, 0)],mode= 'constant')
         d=np.pad(d,[(r_pad, 0), (0,c_pad)],mode= 'constant')
-        # for i in range(int(size[0]*size[1]/2)):
-        #     random_x=np.random.randint(size[0])
-        #     random_y=np.random.randint(size[1])
-        #     d[random_x,random_y]=0
+  
         left=left/255
         right=right/255
         left=np.subtract(left,mean)/std#left-np.mean(left))/np.std(left)
         right=np.subtract(right,mean)/std#(right-np.mean(right))/np.std(right)
 
-        #max_val=np.max(np.max(left))
-        #min_val=np.min(np.min(left))
-        #left=(left-np.mean(left))/np.std(left)
-        #right=(right-np.mean(right))/np.std(right)
-
-        #print(np.max(np.max(left)),np.min(np.min(left)),np.max(np.max(d)),np.min(np.min(d)))
-        #scipy.misc.imsave("left.png",left[280:370,300:370,::])
-        #scipy.misc.imsave("right.png",right[280:370,300-int(d[325,325]):370-int(d[325,325]),::])
-
-        #scipy.misc.imsave("d.png",d)
-        # print(np.max(np.max(left)),np.min(np.min(left)),np.max(np.max(d)),np.min(np.min(d)))
-        # scipy.misc.imsave("left.png",left)
-        # scipy.misc.imsave("right.png",right)
-        # scipy.misc.imsave("depth.png",d)
-        # exit(0)
-        #preprocessing
-        #print(training_list[random_image_index])
-        # plt.figure(1)
-        # plt.imshow(left)
-        # plt.colorbar()
-        # plt.figure(2)
-        # plt.imshow(right)
-        # plt.colorbar()
-        # plt.figure(3)
-        # print(training_list_noc_label[random_image_index])
-        # plt.imshow(d)
-        # plt.colorbar()
-        # plt.show()
-        #exit(0)
+      
         left = left[np.newaxis,...]
         right = right[np.newaxis,...]
         d= d[np.newaxis,...]
@@ -346,10 +223,7 @@ def load_random_patch(training_list_left,training_list_right,training_list_noc_l
 valid_pixels_list):
     #total_patch_size=receptive_field
     half_path_size=int(receptive_field/2)
-    #half_path_size_w=int(maxDisp+receptive_field/2)
-    #half_receptive=int(patch_size/2)
-    #half_max_disp=int(maxDisp/2)
-
+  
 
     batch_left=np.zeros((0, receptive_field,receptive_field,3), dtype=np.float32)
     batch_right=np.zeros((0, receptive_field,maxDisp+receptive_field,3), dtype=np.float32)
@@ -358,18 +232,6 @@ valid_pixels_list):
     for batch in range(0,batch_size):
         random_image_index=np.random.randint(len(training_list_left))
 
-        #valid_choices=np.where(training_list_noc_label[random_image_index]!=0)
-        #
-        # #put this in a funciton or something
-        # #transpose
-        # valid_choices=list(map(list, zip(*valid_choices)))
-        #
-        # valid_choices=[x_y_pair for x_y_pair in valid_choices if x_y_pair[0]>half_path_size]
-        # valid_choices=[x_y_pair for x_y_pair in valid_choices if x_y_pair[0]<training_list_left[random_image_index].shape[0]-half_path_size]
-        #
-        # valid_choices=[x_y_pair for x_y_pair in valid_choices if x_y_pair[1]>half_path_size+half_max_disp+maxDisp]
-        # valid_choices=[x_y_pair for x_y_pair in valid_choices if x_y_pair[1]<training_list_left[random_image_index].shape[1]-half_max_disp-half_path_size]
-
         random_choice=np.random.randint(len(valid_pixels_list[random_image_index]))
         x_rand,y_rand=valid_pixels_list[random_image_index][random_choice][0],valid_pixels_list[random_image_index][random_choice][1]
         #left=training_list_left[random_image_index][max(0,x_rand-half_path_size):x_rand+half_path_size+1,max(0,y_rand-half_path_size):y_rand+half_path_size+1,:]
@@ -377,31 +239,9 @@ valid_pixels_list):
         y_rand-half_path_size:y_rand+half_path_size,:]
         d=training_list_noc_label[random_image_index][x_rand-half_path_size:x_rand+half_path_size,y_rand-half_path_size:y_rand+half_path_size]
         right=training_list_right[random_image_index][x_rand-half_path_size:x_rand+half_path_size,y_rand-half_path_size-maxDisp:y_rand+half_path_size,:]
-        # plt.figure(0)
-        # plt.imshow(left)
-        # plt.figure(1)
-        # plt.imshow(right)
-        # plt.figure(2)
-        # plt.imshow(d,cmap="gray")
-        # print(d)
-        # plt.show()
-        #left=training_list_left[random_image_index][x_rand-half_path_size:x_rand+half_path_size,
-        #y_rand-half_path_size_w:y_rand+half_path_size_w,:]
-        #d=int(training_list_noc_label[random_image_index][x_rand,y_rand])
-        #right=training_list_right[random_image_index][x_rand-half_path_size:x_rand+half_path_size,
-        #y_rand-d-half_path_size_w-half_max_disp:y_rand-d+half_path_size_w+half_max_disp,:]
-        #d=np.full((1,1),half_max_disp)
-        #print("displacment",d)
-        #left,right,d=pad_image_and_label(left,right,d,total_patch_size,patch_size,maxDisp)
-        #scipy.misc.imsave("left.png",left)
-        #scipy.misc.imsave("left_complete.png",training_list_left[random_image_index][x_rand-half_path_size:x_rand+half_path_size+1,:,:])
-        #scipy.misc.imsave("right.png",right)
-        #scipy.misc.imsave("right_complete.png",training_list_right[random_image_index][x_rand-half_path_size:x_rand+half_path_size+1,:,:])
-        #exit(0)
+    
         d=disp_image_to_label(d,maxDisp+1)
-        # d=np.argmax(d,2)
-        # scipy.misc.imsave("right_right.png",right[:,d[0]:d[0]+receptive_field,:])
-        # exit(0)
+      
         left = left[np.newaxis,...]
         right = right[np.newaxis,...]
         d= d[np.newaxis,...]
@@ -414,29 +254,9 @@ valid_pixels_list):
     return batch_left,batch_right,batch_disp
 
 def disp_image_to_label(disp_image,nclasses):
-    #im_gt=np.zeros((disp_image.shape[0],disp_image.shape[1],nclasses),dtype=np.float32)
-    #disp_image=nclasses-disp_image
-    #for n in range(1,nclasses):
-    #    im_gt[:,:,n]=(disp_image[:,:]==n)#*0.5
+   
     disp_image[disp_image>nclasses-1]=0
-    #disp_image[disp_image[:,:]==0]=-1
-    #print(im_gt[:,:,1],np.max(im_gt[:,:,:]))
-
-    # right_label=np.where(im_gt)
-    # for n in range(0,len(right_label[0])):
-    #    if right_label[2][n]>0:
-    #        im_gt[right_label[0][n],right_label[1][n],right_label[2][n]-1]=0.2
-    #
-    #    if right_label[2][n]>2:
-    #        im_gt[right_label[0][n],right_label[1][n],right_label[2][n]-2]=0.05
-    #
-    #    if right_label[2][n]<nclasses-1:
-    #        im_gt[right_label[0][n],right_label[1][n],right_label[2][n]+1]=0.2
-    #
-    #    if right_label[2][n]<nclasses-2:
-    #        im_gt[right_label[0][n],right_label[1][n],right_label[2][n]+2]=0.05
-
-    #return im_gt
+   
     return disp_image
 
 def get_valid_pixels(training_list_noc_label,total_patch_size,maxDisp):
@@ -482,11 +302,7 @@ def load_all_images_test(left_paths,right_paths):
 
 def processs_input_image(image):
     image=np.array(image,dtype=np.float32)
-    #image[:,:,0]-=123.68
-    #image[:,:,1]-=116.779
-    #image[:,:,2]-=103.939
-    #image[:, :, 0], image[:, :, 2] = image[:, :, 2], image[:, :, 0]
-    #image=(image-np.mean(image))/np.std(image)
+
     return image#/79
 
 
@@ -2277,61 +2093,22 @@ def train_kitty(dataset,netPath="./bvlc_alexnet.npy",maxDisp=192,gpu='/gpu:1'):
 
                 _,loss_val,res=sess.run([optimizer,loss,match], feed_dict={x_left: image_left,x_right:image_right, y: im_gt})
 
-                #end = time.time()
-                #print("time ",end - start)
-                # plt.figure(1)
-                # plt.imshow(res_l[0])
-                # plt.colorbar()
-                # plt.figure(2)
-                # plt.imshow(res_r[0])
-                # plt.colorbar()
-                # plt.figure(3)
-                # plt.imshow(res_gt[0])
-                # plt.colorbar()
-                # plt.show()
+
                 if(i%training_iter==0):
 
-                    # mean_error=pixel3error=0
-                    # for a in range(100):
-                    #         res,im_gt=sess.run([match,y], feed_dict={training_mode: False})
-                    #         res=np.squeeze(res, axis=3)
-                    #         mean_error+=np.mean(np.abs(res-im_gt))
-                    #         pixel3error+=error(res,im_gt,3)
-                    # if (mean_error<lowest_error):
-                    #     saver.save(sess, "lowest_error",global_step=sav_times*i+1)
-                    #     print(" new lowest error at iteration ",i, " error ",mean_error, " 3pixelerror ",pixel3error)
-                    #     lowest_error=mean_error
+
                     res=np.squeeze(res, axis=3)
-                    #res=np.argmax(res,3)
-                    #error(res,im_gt,3)
+ 
                     error_it=np.abs(res-im_gt)
                     error_it[im_gt==0]=0
                     print(sav_times,i,loss_val,np.mean(error_it),error(res,im_gt,3))
-                    #error_it[error_it>3]=255
-                    #file.write("Training "+str(sav_times)+" "+str(i)+" "+str(loss_val)+"\n")
-                    #    print("WROOOOOOOOOOOOOOOONG!")
+ 
                     error_it[error_it>3]=255
                     scipy.misc.imsave(model_name+".png",res[0,:,:])
                     scipy.misc.imsave(model_name+"gt.png",im_gt[0,:,:])
                     scipy.misc.imsave(model_name+"3pixelerror.png",error_it[0,:,:])
-                    #scipy.misc.imsave(model_name+"error_3pixel.png",error_it[0,:,:])
-                    #scipy.misc.imsave(model_name_"+gt_22loss_scenflow2.png",im_gt[1,:,:])
-                    #scipy.misc.imsave("right_right.png",image_right[0,:,-np.argmax(im_gt,3)[0]-sample_size:-np.argmax(im_gt,3)[0],:])
-                    #scipy.misc.imsave("right_predicted.png",image_right[0,:,-np.argmax(res,3)[0]-sample_size:-np.argmax(res,3)[0],:])
-                if(loss_val==0):
-                    #print(res,sav_times,i,np.argmax(im_gt,3)[0],np.argmax(res,3)[0])
-                    #res=np.squeeze(res, axis=3)
-                    #print(res.shape,np.max(np.max(res)),np.max(np.max(im_gt)))
-                    print("Loss zero!!")
-                    # scipy.misc.imsave("zeroloss"+".png",res[0])
-                    # scipy.misc.imsave("zeroloss_gt.png",im_gt[0,:,:])
-                    # print(np.max(np.max(res)),np.max(np.max(im_gt)))
 
-                    #exit(0)
-                # if(loss_val!=loss_val):
-                #     #print(res)
-                #     print("Loss not a number!!")
-                #     exit(0)
+  
 
                 if (i%validation_iter==0) and (i>0):
                      total_val_loss=0.0
@@ -2350,12 +2127,6 @@ def train_kitty(dataset,netPath="./bvlc_alexnet.npy",maxDisp=192,gpu='/gpu:1'):
                          error_val+=error(res,im_gt,3)
                      print("\n\n\nvalidation: epoch ",sav_times,i," ",total_val_loss/validation_samples," error: ",error_val/validation_samples,"\n\n\n")
 
-                     #file.write("Testing epoch "+str(sav_times)+" "+str(i)+" "+str(total_val_loss/validation_samples)+" error "+str(error_val/validation_samples)+"\n")
-
-                #
-                #     #print(i,displacement,np.argmax(im_gt,3),tf.argmax(res,3).eval(),loss_val)
-                #
-                #     exit(0)
                 counter+=1
             learning_start=learning_start*learning_decay
             saver.save(sess, model_name+str(sav_times)+"times.ckpt",global_step=sav_times*i+1)
